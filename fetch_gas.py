@@ -1,6 +1,8 @@
 import os
 import json
+import time
 import urllib.request
+import urllib.error
 from datetime import date, timedelta
 
 SERIES_ID = "DHHNGSP"
@@ -28,8 +30,23 @@ url = (
     f"&observation_end={end.isoformat()}"
 )
 
-with urllib.request.urlopen(url) as resp:
-    payload = json.loads(resp.read().decode())
+last_err = None
+for attempt in range(5):
+    try:
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            payload = json.loads(resp.read().decode())
+        break
+    except urllib.error.HTTPError as e:
+        last_err = e
+        if e.code >= 500:
+            time.sleep(2 ** attempt)
+            continue
+        raise
+    except urllib.error.URLError as e:
+        last_err = e
+        time.sleep(2 ** attempt)
+else:
+    raise SystemExit(f"FRED request failed after retries: {last_err}")
 
 rows = [
     {"date": o["date"], "value": float(o["value"])}
