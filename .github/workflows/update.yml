@@ -2,7 +2,7 @@ name: Update gas price HTML
 
 on:
   schedule:
-    - cron: "30 13 * * *"  # 13:30 UTC daily (~9:30am ET)
+    - cron: "0 6 * * *"  # 06:00 UTC daily = 1am EST (2am EDT)
   workflow_dispatch:
 
 permissions:
