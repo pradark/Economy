@@ -26,7 +26,7 @@ Each indicator is shown as two charts: the last 1 year on the left, the last 20 
 
 ## How it works
 
-- [`fetch_gas.py`](fetch_gas.py) pulls the latest 20 years of each series from the FRED API and regenerates `index.html` (a self-contained page using Chart.js + the annotation plugin).
+- [`fetch_indicators.py`](fetch_indicators.py) pulls the latest 20 years of each FRED series listed in [Indicators tracked](#indicators-tracked), plus NBER recession dates, and regenerates `index.html` — a self-contained page rendering each indicator as a 1-year and 20-year chart (Chart.js + the annotation plugin) with recession periods shaded.
 - [`.github/workflows/update.yml`](.github/workflows/update.yml) runs the script on a daily schedule (06:00 UTC = 1am EST), commits any changes, and pushes them.
 - GitHub Pages serves `index.html` from the `main` branch root.
 - An interactive [Streamlit version](app.py) is also available for deployment to Streamlit Community Cloud.
@@ -35,7 +35,7 @@ Each indicator is shown as two charts: the last 1 year on the left, the last 20 
 
 ```bash
 export FRED_API_KEY=your_key_here
-python3 fetch_gas.py    # regenerates index.html
+python3 fetch_indicators.py    # fetches FRED data, regenerates index.html
 
 # optional: run the Streamlit app
 pip install -r requirements.txt

@@ -1,4 +1,4 @@
-name: Update gas price HTML
+name: Update economic indicators dashboard
 
 on:
   schedule:
@@ -18,10 +18,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Fetch FRED data and regenerate index.html
+      - name: Fetch FRED indicators and regenerate index.html
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-        run: python fetch_gas.py
+        run: python fetch_indicators.py
 
       - name: Commit updated HTML
         run: |
@@ -31,6 +31,6 @@ jobs:
             echo "No changes."
           else
             git add index.html
-            git commit -m "chore: daily gas price update"
+            git commit -m "chore: daily indicators refresh"
             git push
           fi
