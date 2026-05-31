@@ -37,7 +37,7 @@ def fetch(series_id, api_key, start, end):
         f"&observation_start={start.isoformat()}&observation_end={end.isoformat()}"
     )
     last_err = None
-    for attempt in range(5):
+    for attempt in range(6):
         try:
             with urllib.request.urlopen(url, timeout=30) as resp:
                 data = json.loads(resp.read().decode())
@@ -48,9 +48,18 @@ def fetch(series_id, api_key, start, end):
             ]
         except urllib.error.HTTPError as e:
             last_err = e
-            if e.code < 500:
+            # Retry on rate limits (429) and server errors (5xx); otherwise fail fast.
+            if e.code != 429 and e.code < 500:
                 raise
-            time.sleep(2 ** attempt)
+            retry_after = e.headers.get("Retry-After") if e.headers else None
+            try:
+                wait = float(retry_after) if retry_after else (2 ** attempt)
+            except ValueError:
+                wait = 2 ** attempt
+            # Be extra patient on 429s.
+            if e.code == 429:
+                wait = max(wait, 5 * (attempt + 1))
+            time.sleep(wait)
         except urllib.error.URLError as e:
             last_err = e
             time.sleep(2 ** attempt)
@@ -191,6 +200,9 @@ def main():
 
     series_data = []
     for s in SERIES:
+        # Gentle throttle to stay well under FRED's per-second limit (the API
+        # tolerates ~120 req/min but bursts of >5/sec can trip a 429).
+        time.sleep(0.5)
         try:
             obs20 = fetch(s["id"], api_key, start20, end)
         except SystemExit as e:
